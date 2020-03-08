@@ -1,0 +1,19 @@
+version: '3.0'
+services:
+  oracledb:
+    image: store/oracle/database-enterprise:12.2.0.1
+    container_name: oracledb
+    hostname: oracledb
+    networks:
+     - debnet
+    ports:
+     - "1521:1521"
+    shm_size: 2g
+networks:
+  debnet:
+    driver: bridge
+    driver_opts:
+        com.docker.network.driver.mtu: 1500 
+    ipam:
+      config:
+      - subnet: 172.30.0.0/16

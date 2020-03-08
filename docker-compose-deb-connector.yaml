@@ -1,0 +1,27 @@
+version: '3.0'
+services:
+  connect:
+    image: debezium/connect:latest
+    container_name: connect
+    hostname: connect
+    networks:
+     - debnet
+    ports:
+     - "8083:8083"
+    environment:
+     - GROUP_ID=1
+     - CONFIG_STORAGE_TOPIC=my_connect_configs
+     - OFFSET_STORAGE_TOPIC=my_connect_offsets
+     - STATUS_STORAGE_TOPIC=my_connect_statuses 
+    links:
+     - zookeeper:zookeeper
+     - kafka:kafka
+     - oracledb:oracledb
+networks:
+  debnet:
+    driver: bridge
+    driver_opts:
+        com.docker.network.driver.mtu: 1500 
+    ipam:
+      config:
+      - subnet: 172.30.0.0/16

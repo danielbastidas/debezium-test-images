@@ -1,0 +1,83 @@
+version: '3.0'
+services:
+  oracledb:
+    image: store/oracle/database-enterprise:12.2.0.1
+    container_name: oracledb
+    hostname: oracledb
+    networks:
+     - debnet
+    ports:
+     - "1521:1521"
+    shm_size: 2g
+    #healthcheck:         
+    #test: ["CMD", "if [ ! -z $ORACLE_SID ]", "then echo 'oracle database is ready' && exit 0", "else echo 'database not ready yet' && exit 1", "fi"]
+    #interval: 30s
+    #timeout: 10s
+    #retries: 5
+  zookeeper:
+    image: debezium/zookeeper:latest
+    container_name: zookeeper
+    hostname: zookeeper
+    networks:
+     - debnet
+    ports:
+     - "2181:2181"
+     - "2888:2888"
+     - "3888:3888"
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:2181"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+  kafka:
+    image: debezium/kafka:latest
+    container_name: kafka
+    hostname: kafka
+    networks:
+     - debnet
+    ports:
+     - "9092:9092"
+    environment:
+     - ZOOKEEPER_CONNECT=zookeeper:2181
+    links:
+     - zookeeper:zookeeper
+    depends_on:
+     - zookeeper
+       #command: ["/wait-for-it.sh", "zookeeper:2181", "--timeout=0", "--", "echo", "zookeeper is ready"]
+       #healthcheck:
+       #test: ["CMD", "curl", "-f", "http://localhost:9092"]
+       #interval: 30s
+       #timeout: 10s
+       #retries: 5
+  connect:
+    image: debezium/connect:latest
+    container_name: connect
+    hostname: connect
+    networks:
+     - debnet
+    ports:
+     - "8083:8083"
+    environment:
+     - GROUP_ID=1
+     - CONFIG_STORAGE_TOPIC=my_connect_configs
+     - OFFSET_STORAGE_TOPIC=my_connect_offsets
+     - STATUS_STORAGE_TOPIC=my_connect_statuses
+     - BOOTSTRAP_SERVERS=kafka:9092
+    links:
+     - zookeeper:zookeeper
+     - kafka:kafka
+     - oracledb:oracledb
+    depends_on:
+     - oracledb
+     - kafka
+    entrypoint: /bin/bash -c "/wait-for-it.sh oracledb:1521 --timeout=0 -- echo 'oracle db is ready' && sh /wait-for-it.sh kafka:9092 --timeout=0 -- echo 'kafka is ready' && /docker-entrypoint.sh start"
+    #command: tail -f /dev/null
+networks:
+  debnet:
+    driver: bridge
+    driver_opts:
+        com.docker.network.driver.mtu: 1500
+    ipam:
+      config:
+      - subnet: 172.30.0.0/16
+

@@ -1,0 +1,10 @@
+docker run -d -it --name oracledb -v /data/OracleDBData:/ORCL store/oracle/database-enterprise:12.2.0.1
+docker run -it --name zookeeper -p 2181:2181 -p 2888:2888 -p 3888:3888 debezium/zookeeper:latest
+docker run -it --name kafka -p 9092:9092 --link zookeeper:zookeeper debezium/kafka:latest
+docker run -it --name connect -p 8083:8083 -e GROUP_ID=1 -e CONFIG_STORAGE_TOPIC=my_connect_configs -e OFFSET_STORAGE_TOPIC=my_connect_offsets -e STATUS_STORAGE_TOPIC=my_connect_statuses --link zookeeper:zookeeper --link kafka:kafka --link oracledb:oracledb debezium/connect:latest
+
+# to run the images
+docker-compose up -d connect 
+
+# to build the images
+docker build -t debezium/connect:latest -f Dockerfile-connect .
