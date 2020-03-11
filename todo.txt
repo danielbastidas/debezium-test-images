@@ -1,1 +1,2 @@
-1. run all docker images using docker compose
+1. run all docker images using docker compose [DONE]
+2. fix errors on connect log about oracle connector

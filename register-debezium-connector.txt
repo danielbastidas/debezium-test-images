@@ -1,0 +1,2 @@
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8083/connectors/ -d '{ "name": "oracle-connector", "config": { "connector.class": "io.debezium.connector.oracle.OracleConnector", "tasks.max": "1", "database.hostname": "oracledb", "database.port": "1521", "database.user": "test", "database.password": "test", "database.server.id": "34", "database.server.name": "oracledb", "database.whitelist": "test", "database.history.kafka.bootstrap.servers": "kafka:9092", "database.history.kafka.topic": "dbhistory.inventory" } }'
+
